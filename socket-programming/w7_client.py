@@ -1,30 +1,27 @@
 import socket
 import threading
 
-HOST = "127.0.0.1"
-PORT = 12348
-
-def receive(sock):
+def receive(client_socket):
     while True:
         try:
-            msg = sock.recv(1024).decode()
-            if msg:
-                print("\n" + msg)
+            msg = client_socket.recv(1024).decode()
+            if not msg:
+                break
+            print(f"Received msg: {msg}")
         except:
             break
 
-def send(sock):
-    while True:
-        msg = input()
-        sock.send(msg.encode())
+port = input("Enter the port of the server to connect to (5001 or 5002): ")
+client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+client_socket.connect(('127.0.0.1',int(port)))
+print(f"Connected to port {port}")
 
-def main():
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((HOST, PORT))
-    print(f"Connected to {HOST}:{PORT}")
+threading.Thread(target=receive,args=(client_socket,),daemon=True).start()
 
-    threading.Thread(target=receive, args=(client,), daemon=True).start()
-    send(client)
+while True:
+    msg = input("Enter message: ")
+    if msg.lower()=="exit":
+        break
+    client_socket.send(msg.encode())
 
-if __name__ == "__main__":
-    main()
+client_socket.close()
